@@ -39,15 +39,17 @@ def main(args):
         from constants import SIM_TASK_CONFIGS
         task_config = SIM_TASK_CONFIGS[task_name]
     else:
-        from aloha_scripts.constants import TASK_CONFIGS
-        task_config = TASK_CONFIGS[task_name]
+        # from aloha_scripts.constants import TASK_CONFIGS
+        from constants_my import MY_TASK_CONFIGS
+        task_config = MY_TASK_CONFIGS[task_name]
     dataset_dir = task_config['dataset_dir']
     num_episodes = task_config['num_episodes']
     episode_len = task_config['episode_len']
-    camera_names = task_config['camera_names']
+    camera_names = task_config['camera_names'] # 可能需要自己取一个名字
 
     # fixed parameters
-    state_dim = 14
+    state_dim = 14 # 好像是 dimension of action
+    state_dim = 6 # 好像是 dimension of action
     lr_backbone = 1e-5
     backbone = 'resnet18'
     if policy_class == 'ACT':
@@ -324,7 +326,7 @@ def train_bc(train_dataloader, val_dataloader, config):
     ckpt_dir = config['ckpt_dir']
     seed = config['seed']
     policy_class = config['policy_class']
-    policy_config = config['policy_config']
+    policy_config = config['policy_config'] #训练时候的一些配置
 
     set_seed(seed)
 

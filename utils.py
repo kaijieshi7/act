@@ -18,13 +18,14 @@ class EpisodicDataset(torch.utils.data.Dataset):
         self.__getitem__(0) # initialize self.is_sim
 
     def __len__(self):
-        return len(self.episode_ids)
+        return len(self.episode_ids) # 多少个trajectory
 
     def __getitem__(self, index):
         sample_full_episode = False # hardcode
 
         episode_id = self.episode_ids[index]
-        dataset_path = os.path.join(self.dataset_dir, f'episode_{episode_id}.hdf5')
+        # dataset_path = os.path.join(self.dataset_dir, f'episode_{episode_id}.hdf5')
+        dataset_path = os.path.join(self.dataset_dir, f'{episode_id+1}.hdf5')
         with h5py.File(dataset_path, 'r') as root:
             is_sim = root.attrs['sim']
             original_action_shape = root['/action'].shape
@@ -80,7 +81,8 @@ def get_norm_stats(dataset_dir, num_episodes):
     all_qpos_data = []
     all_action_data = []
     for episode_idx in range(num_episodes):
-        dataset_path = os.path.join(dataset_dir, f'episode_{episode_idx}.hdf5')
+        # dataset_path = os.path.join(dataset_dir, f'episode_{episode_idx}.hdf5')
+        dataset_path = os.path.join(dataset_dir, f'{episode_idx+1}.hdf5')
         with h5py.File(dataset_path, 'r') as root:
             qpos = root['/observations/qpos'][()]
             qvel = root['/observations/qvel'][()]
@@ -109,6 +111,7 @@ def get_norm_stats(dataset_dir, num_episodes):
 
 
 def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val):
+    print('为什么没有数据集增强')
     print(f'\nData from: {dataset_dir}\n')
     # obtain train test split
     train_ratio = 0.8
