@@ -211,22 +211,22 @@ def eval_bc(config, ckpt_name, save_episode=True):
         ts = env.reset()
 
         ### onscreen render
-        if onscreen_render:
+        if onscreen_render: # 除非是simulation, 否则设置为False
             ax = plt.subplot()
             plt_img = ax.imshow(env._physics.render(height=480, width=640, camera_id=onscreen_cam))
             plt.ion()
 
         ### evaluation loop
-        if temporal_agg:
+        if temporal_agg: # 推理的时候，可选可不选
             all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cuda()
 
-        qpos_history = torch.zeros((1, max_timesteps, state_dim)).cuda()
+        qpos_history = torch.zeros((1, max_timesteps, state_dim)).cuda() # 先全部初始化为0
         image_list = [] # for visualization
         qpos_list = []
         target_qpos_list = []
         rewards = []
         with torch.inference_mode():
-            for t in range(max_timesteps):
+            for t in range(max_timesteps): # 推理的时候可以放大这个max_timesteps吗
                 ### update onscreen render and wait for DT
                 if onscreen_render:
                     image = env._physics.render(height=480, width=640, camera_id=onscreen_cam)
@@ -240,16 +240,16 @@ def eval_bc(config, ckpt_name, save_episode=True):
                 else:
                     image_list.append({'main': obs['image']})
                 qpos_numpy = np.array(obs['qpos'])
-                qpos = pre_process(qpos_numpy)
+                qpos = pre_process(qpos_numpy) # 这里是减均值，除以方差
                 qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
                 qpos_history[:, t] = qpos
-                curr_image = get_image(ts, camera_names)
+                curr_image = get_image(ts, camera_names) # 得到相机的数据
 
                 ### query policy
                 if config['policy_class'] == "ACT":
-                    if t % query_frequency == 0:
+                    if t % query_frequency == 0: # query_frequency有什么用
                         all_actions = policy(qpos, curr_image)
-                    if temporal_agg:
+                    if temporal_agg: # 先不管
                         all_time_actions[[t], t:t+num_queries] = all_actions
                         actions_for_curr_step = all_time_actions[:, t]
                         actions_populated = torch.all(actions_for_curr_step != 0, axis=1)
@@ -268,11 +268,11 @@ def eval_bc(config, ckpt_name, save_episode=True):
 
                 ### post-process actions
                 raw_action = raw_action.squeeze(0).cpu().numpy()
-                action = post_process(raw_action)
+                action = post_process(raw_action) # 乘以方差加上均值
                 target_qpos = action
 
                 ### step the environment
-                ts = env.step(target_qpos)
+                ts = env.step(target_qpos)#输入需要的运动
 
                 ### for visualization
                 qpos_list.append(qpos_numpy)
